@@ -1,18 +1,12 @@
 {
   "name": "dsh-webctl",
   "version": "0.1.0",
+  "private": true,
   "description": "Unofficial tmux-based lifecycle manager for the DeepSeek Harness Web UI, with a stable token-free short link.",
   "type": "module",
   "bin": {
     "dsh-webctl": "./dsh-web.js"
   },
-  "files": [
-    "dsh-web.js",
-    "dsh-web.config.example.json",
-    "docs/",
-    "README.md",
-    "LICENSE"
-  ],
   "scripts": {
     "check": "node --check dsh-web.js"
   },

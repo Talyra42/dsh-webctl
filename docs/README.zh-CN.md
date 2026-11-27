@@ -52,12 +52,14 @@ attach: tmux attach -t dsh-web
 
 如果已经有一个手动启动的 `dsh web`，先停掉它；脚本会拒绝启动第二个实例。
 
-可选：安装成本地命令：
+本项目只以源码分发，不发布 npm 包。`npm link` 是可选的，只把当前 checkout 软链到全局 bin：
 
 ```bash
 npm link
 dsh-webctl start
 ```
+
+取消链接：`npm unlink -g dsh-webctl`。如果连全局命令都不想要，就继续用 `node dsh-web.js ...`。
 
 ## 命令
 

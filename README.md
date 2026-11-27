@@ -58,12 +58,16 @@ works from then on.
 If another `dsh web` is already running, stop it first. The script intentionally
 refuses to start a second instance.
 
-Optional: install the command locally.
+This project is distributed as source only; there is no npm package. `npm link`
+is optional and only symlinks this checkout into your global bin:
 
 ```bash
 npm link
 dsh-webctl start
 ```
+
+Remove it with `npm unlink -g dsh-webctl`. If you prefer no global command at
+all, keep using `node dsh-web.js ...`.
 
 ## Commands
 
