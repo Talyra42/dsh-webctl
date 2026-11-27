@@ -11,6 +11,15 @@ bookmarkable short URL that always redirects to the current token URL.
 
 This project is not affiliated with DeepSeek.
 
+## At a glance
+
+| | plain `dsh web` | `dsh-webctl` |
+| --- | --- | --- |
+| Lifetime | tied to the terminal | detached tmux session |
+| URL | a new token URL on every start | captured token URL plus a stable short link |
+| Logs | terminal scrollback | log file, `logs`, `attach` |
+| Control | manual | `start`, `stop`, `restart`, `status` |
+
 ## Features
 
 - `start`, `stop`, `restart`, `status`, `url`, `short`, `logs`, `attach`
@@ -21,6 +30,42 @@ This project is not affiliated with DeepSeek.
 - Refuses to start a second `dsh web` instance
 - Runtime files live next to the script; the script does not write to `~/.dsh`
 - Local config and runtime state are gitignored
+
+## Use cases
+
+### Keep the Web UI running locally
+Start it once and close the terminal. The tmux session and the short link keep
+working; use `logs -f` for the raw output or `attach` for the live pane.
+
+### Reach it from a VM
+With VMware NAT or host-only networking, bind DSH to the host-side address the
+guest can reach — for example `192.168.8.1` — leave `shortHost` empty, and open
+`http://192.168.8.1:8000/` inside the guest. No token copy/paste and no new URL
+to chase on every start. See
+[Access from a VM or another machine](#access-from-a-vm-or-another-machine).
+
+### Bookmark one URL across restarts
+The token changes on every start; the short URL does not. Keep `shortHost` and
+`shortPort` stable and bookmark it. The redirect process reads the current token
+URL from local state on every request.
+
+### Share on a trusted LAN
+Bind `host` to the host's LAN address and open the short URL from a phone or
+another computer on the same network. The short link is not an authentication
+layer: use this only on a trusted LAN or behind a VPN/firewall, and never expose
+ports 3080 or 8000 to the public internet.
+
+### Remote access
+Use your existing VPN or an SSH tunnel. `dsh-webctl` is not a tunnel, reverse
+proxy, or authentication layer; it only binds the listener to a concrete
+interface and advertises the short URL.
+
+## What this is not
+
+- Not a VPN, reverse proxy, or tunnel. It does not add TLS or authentication.
+- Not a boot service. A host reboot stops the tmux session; use a systemd user
+  unit if you need persistence.
+- Not a DSH plugin. It shells out to `dsh web` and does not modify DSH itself.
 
 ## Requirements
 
@@ -178,12 +223,13 @@ host has other networks.
 - This tool does not move DSH's profile or session data. DSH itself still uses
   `~/.dsh`; only this tool's runtime files stay next to the script.
 
-## Files
+## Project structure and files
 
 ```text
 dsh-web.js
 dsh-web.config.example.json
 dsh-web.config.json        # local, gitignored
+docs/README.zh-CN.md
 .dsh-web/state.json        # 0600
 .dsh-web/dsh-web.log       # 0600
 ```
@@ -191,6 +237,14 @@ dsh-web.config.json        # local, gitignored
 `state.json` records the tmux session/pane, the current token URL, the boot ID,
 and the short-link process. `dsh-web.log` contains the DSH and short-link
 output, including token URLs.
+
+The single-file layout is intentional. There is no build step and no runtime
+dependency beyond Node and tmux; `bin` points directly at `dsh-web.js`, so
+`npm link` is just a symlink to this checkout. The file is grouped into
+configuration, state/tmux helpers, log/URL helpers, the short-link process, DSH
+launch, commands, and the CLI entry point. If the tool grows tests or many more
+commands, those sections can become modules; for now, one auditable file keeps
+distribution simple.
 
 ## Troubleshooting
 

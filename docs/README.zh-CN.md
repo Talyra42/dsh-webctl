@@ -8,6 +8,15 @@
 
 本项目与 DeepSeek 官方无关。
 
+## 一眼看懂
+
+| | 原生 `dsh web` | `dsh-webctl` |
+| --- | --- | --- |
+| 生命周期 | 跟着终端 | detach 的 tmux 会话 |
+| URL | 每次启动一个新的 token URL | 捕获 token URL，并提供稳定短链 |
+| 日志 | 终端滚动 | 日志文件、`logs`、`attach` |
+| 控制 | 手动 | `start`、`stop`、`restart`、`status` |
+
 ## 特性
 
 - `start`、`stop`、`restart`、`status`、`url`、`short`、`logs`、`attach`
@@ -18,6 +27,29 @@
 - 拒绝启动第二个 `dsh web` 实例
 - 运行时文件放在脚本旁边；脚本不写 `~/.dsh`
 - 本地配置和运行时状态默认不进 git
+
+## 使用场景
+
+### 本机常驻
+启动一次就可以关掉终端。tmux 会话和短链继续工作；需要原始输出就 `logs -f`，需要实时查看就 `attach`。
+
+### 从虚拟机访问
+VMware NAT 或 host-only 网络下，把 `host` 绑到 guest 能访问的宿主机地址，例如 `192.168.8.1`，`shortHost` 留空，然后在 guest 里打开 `http://192.168.8.1:8000/`。不用复制 token，也不用每次追新 URL。详见[从虚拟机或其他机器访问](#从虚拟机或其他机器访问)。
+
+### 收藏一个 URL
+token 每次启动都会变，短链不变。保持 `shortHost`/`shortPort` 稳定并收藏即可；短链每次请求都会从本地 state 读取当前 token URL。
+
+### 可信局域网共享
+把 `host` 绑到宿主机的局域网地址，手机或同网段的另一台电脑打开短链。短链不是认证层：只适合可信局域网，或放在 VPN/防火墙后面；不要把 3080/8000 暴露到公网。
+
+### 远程访问
+用现有的 VPN 或 SSH 隧道。`dsh-webctl` 不是隧道、反向代理或认证层；它只负责把监听地址绑到具体网卡，并公告短链。
+
+## 这个工具不做什么
+
+- 不是 VPN、反向代理或隧道；不提供 TLS 或认证。
+- 不是开机自启服务。宿主机重启后 tmux 会话会停；需要持久化就用 systemd user unit。
+- 不是 DSH 插件。它只是调用 `dsh web`，不修改 DSH 本身。
 
 ## 要求
 
@@ -152,17 +184,20 @@ cp dsh-web.config.example.json dsh-web.config.json
 - DSH agent 能执行你用户权限下的命令；浏览器或 VM 被控应视为宿主机安全问题。
 - 本工具不迁移 DSH 的 profile/session。DSH 自己仍然使用 `~/.dsh`，只有本工具的运行时文件放在脚本旁边。
 
-## 文件
+## 项目结构与文件
 
 ```text
 dsh-web.js
 dsh-web.config.example.json
 dsh-web.config.json        # 本地，gitignored
+docs/README.zh-CN.md
 .dsh-web/state.json        # 0600
 .dsh-web/dsh-web.log       # 0600
 ```
 
 `state.json` 记录 tmux 会话/pane、当前 token URL、boot ID 和短链进程。`dsh-web.log` 包含 DSH 和短链输出，也包含 token URL。
+
+单文件布局是有意的：没有构建步骤，除 Node 和 tmux 外没有运行时依赖；`bin` 直接指向 `dsh-web.js`，所以 `npm link` 只是把当前 checkout 软链到全局 bin。文件内部按配置、状态/tmux、日志/URL、短链进程、DSH 启动、命令和 CLI 入口分区。以后如果加了测试或大量新命令，再把对应分区拆成模块；现在保持一个可审计的文件，分发更简单。
 
 ## 故障排查
 

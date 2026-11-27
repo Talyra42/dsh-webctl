@@ -22,6 +22,10 @@ const STATE_DIR = path.join(SCRIPT_DIR, '.dsh-web');
 const STATE_PATH = path.join(STATE_DIR, 'state.json');
 const LOG_PATH = path.join(STATE_DIR, 'dsh-web.log');
 
+// ---------------------------------------------------------------------------
+// Configuration
+// ---------------------------------------------------------------------------
+
 const DEFAULTS = {
   host: '127.0.0.1',
   port: 3080,
@@ -91,6 +95,10 @@ function loadConfig() {
   return cfg;
 }
 
+// ---------------------------------------------------------------------------
+// Runtime files and state
+// ---------------------------------------------------------------------------
+
 function ensureStateDir() {
   fs.mkdirSync(STATE_DIR, { recursive: true, mode: 0o700 });
   try {
@@ -133,6 +141,10 @@ function removeState() {
   } catch {}
 }
 
+// ---------------------------------------------------------------------------
+// tmux helpers
+// ---------------------------------------------------------------------------
+
 function tmux(args) {
   const result = spawnSync('tmux', args, { encoding: 'utf8' });
   if (result.error) fail(`tmux: ${result.error.message}`);
@@ -171,6 +183,10 @@ function killSession(session) {
   tmux(['kill-session', '-t', `=${session}`]);
 }
 
+// ---------------------------------------------------------------------------
+// Shell, log, and URL helpers
+// ---------------------------------------------------------------------------
+
 function shQuote(value) {
   return `'${String(value).replace(/'/g, "'\\''")}'`;
 }
@@ -199,6 +215,10 @@ function tail(file, lines) {
   return result.stdout;
 }
 
+// ---------------------------------------------------------------------------
+// Port checks
+// ---------------------------------------------------------------------------
+
 function isPortOpen(host, port, timeoutMs = 500) {
   return new Promise((resolve) => {
     let socket;
@@ -221,6 +241,10 @@ function isPortOpen(host, port, timeoutMs = 500) {
     socket.once('error', () => finish(false));
   });
 }
+
+// ---------------------------------------------------------------------------
+// Short-link lifecycle
+// ---------------------------------------------------------------------------
 
 function currentBootId() {
   try {
@@ -326,6 +350,10 @@ async function startShort(cfg, state) {
   fail(`short redirect failed to start; check ${LOG_PATH}\n${tail(LOG_PATH, 20)}`);
 }
 
+// ---------------------------------------------------------------------------
+// DSH process and launch helpers
+// ---------------------------------------------------------------------------
+
 function scanDshWeb() {
   const self = process.pid;
   const found = [];
@@ -395,6 +423,10 @@ function buildCommand(cfg, npx) {
 }
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// ---------------------------------------------------------------------------
+// Commands
+// ---------------------------------------------------------------------------
 
 async function start(cfg) {
   ensureStateDir();
@@ -737,6 +769,10 @@ async function redirect(cfg) {
   });
   return 0;
 }
+
+// ---------------------------------------------------------------------------
+// CLI entry point
+// ---------------------------------------------------------------------------
 
 function help() {
   const name = path.basename(process.argv[1]);
