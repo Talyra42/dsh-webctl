@@ -1,0 +1,4 @@
+.dsh-web/
+dsh-web.config.json
+node_modules/
+*.log

@@ -1,0 +1,25 @@
+{
+  "_doc": [
+    "host / port: where `dsh web` listens. Use 127.0.0.1 for local-only access, or a concrete local interface IP (for example a VMware NAT host IP) when a VM must reach it. `dsh web` rejects wildcard addresses.",
+    "package: the package spec passed to npx. `@latest` resolves the latest release on every start; pin a version for reproducible starts.",
+    "cwd: working directory for the `dsh web` process (the default workspace for new sessions). `~` is expanded.",
+    "session: tmux session name managed by this script.",
+    "npxPath: optional absolute path to npx; leave empty to resolve from PATH.",
+    "shortHost / shortPort: the token-free short link. Empty shortHost follows host. The short link 302s to the current token URL.",
+    "extraArgs: extra arguments appended to the `dsh web` command.",
+    "startTimeoutMs / stopTimeoutMs: startup and shutdown wait limits in milliseconds."
+  ],
+  "host": "127.0.0.1",
+  "port": 3080,
+  "package": "@deepseek-ai/dsh@latest",
+  "profile": "web",
+  "cwd": "~",
+  "session": "dsh-web",
+  "npxPath": "",
+  "shortHost": "",
+  "shortPort": 8000,
+  "startTimeoutMs": 120000,
+  "stopTimeoutMs": 15000,
+  "logTailLines": 120,
+  "extraArgs": []
+}
